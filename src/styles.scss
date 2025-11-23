@@ -1,1 +1,13 @@
 /* You can add global styles to this file, and also import other style files */
+/* 1. Import Tailwind */
+@import "tailwindcss";
+
+/* 2. Import Preline Variants */
+@import "preline/variants.css";
+
+/* 3. Tell Tailwind to scan Preline's JS files for classes */
+@source "../node_modules/preline/dist/*.js";
+
+/* 4. (Optional) Import Tailwind Forms if Preline components need it */
+/* You might need to npm install -D @tailwindcss/forms first */
+/* @plugin "@tailwindcss/forms"; */

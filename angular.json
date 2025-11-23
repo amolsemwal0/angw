@@ -2,7 +2,8 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
-    "packageManager": "npm"
+    "packageManager": "npm",
+    "analytics": "621f5f48-27af-453e-a141-efa1484cff97"
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -23,6 +24,9 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
+            "scripts": [
+              "node_modules/preline/dist/index.js"
+            ],
             "assets": [
               {
                 "glob": "**/*",
