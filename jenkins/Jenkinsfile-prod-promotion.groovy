@@ -1,23 +1,28 @@
 pipeline {
     agent any
 
+    parameters {
+        // Allows you to deploy 'latest' or roll back to a specific tag like '4'
+        string(name: 'TAG_TO_DEPLOY', defaultValue: 'latest', description: 'Enter the Image Tag to deploy (e.g., latest, 4, 5)')
+    }
+
     environment {
-        // --- CONFIGURATION MATCHING YOUR MANUAL COMMAND ---
-        IMAGE_NAME     = "tanmaysinghx/zero-angw:latest"
-        CONTAINER_NAME = "zero-angw"
-        PORT           = "6969"
+        // --- CONFIGURATION FOR ZERO-ANGW ---
+        DOCKER_IMAGE_NAME = 'tanmaysinghx/zero-angw'
+        CONTAINER_NAME    = 'zero-angw'
+        PORT              = '6969'
         
-        // Ngrok Auth Token (Store this in Jenkins Credentials)
+        // Ngrok Config (Uncomment if needed)
         // NGROK_AUTH     = credentials('ngrok-auth-token') 
     }
 
     stages {
-        stage('Pull Latest Image') {
+        stage('Pull Image') {
             steps {
                 script {
-                    echo "Pulling image: $IMAGE_NAME"
-                    // 'sudo' is often required on Jenkins servers unless the user is in the docker group
-                    sh "sudo docker pull $IMAGE_NAME"
+                    echo "Pulling image: ${DOCKER_IMAGE_NAME}:${params.TAG_TO_DEPLOY}"
+                    // REMOVED 'sudo'. Ensure jenkins user is in docker group.
+                    sh "docker pull ${DOCKER_IMAGE_NAME}:${params.TAG_TO_DEPLOY}"
                 }
             }
         }
@@ -25,18 +30,16 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 script {
-                    echo "Deploying container: $CONTAINER_NAME on port $PORT"
-                    
-                    // 1. Remove existing container (ignore error if it doesn't exist)
-                    sh "sudo docker rm -f $CONTAINER_NAME || true"
-                    
-                    // 2. Run the new container
                     sh """
-                        sudo docker run -d \
-                        -p $PORT:$PORT \
-                        --name $CONTAINER_NAME \
-                        --restart always \
-                        $IMAGE_NAME
+                        echo "--- Stopping old container ---"
+                        docker rm -f ${CONTAINER_NAME} || true
+                        
+                        echo "--- Starting new container on port ${PORT} ---"
+                        docker run -d \\
+                            -p ${PORT}:${PORT} \\
+                            --name ${CONTAINER_NAME} \\
+                            --restart always \\
+                            ${DOCKER_IMAGE_NAME}:${params.TAG_TO_DEPLOY}
                     """
                 }
             }
@@ -45,39 +48,42 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 script {
-                    // Wait a moment for Nginx to start
-                    sleep 5
+                    echo "Waiting for container to initialize..."
+                    sleep 5 
                     
-                    // Check if the container is running and serving content
-                    sh "curl -f http://localhost:$PORT/ || exit 1"
-                    echo "✅ App is healthy and running on port $PORT"
+                    // Check if container is running
+                    sh "docker ps | grep ${CONTAINER_NAME}"
+                    
+                    // Check if app is serving content
+                    sh "curl -f http://localhost:${PORT}/ || exit 1"
+                    echo "✅ App is healthy and accessible on port ${PORT}"
                 }
             }
         }
-
-        // // Optional: Keep Ngrok if you want external access
-        // stage('Start Ngrok Tunnel') {
-        //     steps {
-        //         sh '''
-        //             pkill ngrok || true
-        //             ngrok authtoken $NGROK_AUTH
-        //             nohup ngrok http $PORT > ngrok.log &
-        //             sleep 5
-        //         '''
-        //         script {
-        //             def url = sh(script: "curl -s http://localhost:4040/api/tunnels | jq -r .tunnels[0].public_url", returnStdout: true).trim()
-        //             echo "🌍 Public URL: $url"
-        //         }
-        //     }
-        // }
+        
+        /* stage('Start Ngrok Tunnel') {
+            steps {
+                sh '''
+                    pkill ngrok || true
+                    ngrok authtoken $NGROK_AUTH
+                    nohup ngrok http $PORT > ngrok.log &
+                    sleep 5
+                '''
+                script {
+                    def url = sh(script: "curl -s http://localhost:4040/api/tunnels | jq -r .tunnels[0].public_url", returnStdout: true).trim()
+                    echo "🌍 Public URL: $url"
+                }
+            }
+        }
+        */
     }
 
     post {
         success {
-            echo "Pipeline executed successfully."
+            echo "✅ Deployment of ${DOCKER_IMAGE_NAME}:${params.TAG_TO_DEPLOY} Successful!"
         }
         failure {
-            echo "Pipeline failed."
+            echo "❌ Deployment Failed."
         }
     }
 }
