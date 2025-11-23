@@ -8,7 +8,7 @@ pipeline {
         PORT           = "6969"
         
         // Ngrok Auth Token (Store this in Jenkins Credentials)
-        NGROK_AUTH     = credentials('ngrok-auth-token') 
+        // NGROK_AUTH     = credentials('ngrok-auth-token') 
     }
 
     stages {
