@@ -1,0 +1,54 @@
+{
+  "skills": [
+    { "name": "Java", "level": 98, "color": "#ef4444", "icon": "☕" },
+    { "name": "Linux", "level": 90, "color": "#eab308", "icon": "🐧" },
+    { "name": "Network Security", "level": 80, "color": "#3b82f6", "icon": "🔒" }
+  ],
+  "projects": [
+    {
+      "title": "Home Server - Ubuntu",
+      "role": "Server",
+      "stack": ["Ubuntu", "Linux", "Cloudflare", "nginx"],
+      "status": "Compiling",
+      "desc": "GUI for /proc/sys, self‑hosted on a home Ubuntu server and exposed securely over the internet using Cloudflare."
+    }
+  ],
+  "gameStats": [
+    {
+      "game": "DOTA 2",
+      "role": "Pos 5",
+      "rank": "Divine",
+      "hours": "4.2k",
+      "winRate": "54%",
+      "mainChar": "CM"
+    },
+    {
+      "game": "CS:GO",
+      "role": "Entry",
+      "rank": "MGE",
+      "hours": "1.8k",
+      "winRate": "49%",
+      "mainChar": "AK47"
+    },
+    {
+      "game": "Valorant",
+      "role": "Duelist",
+      "rank": "Immortal",
+      "hours": "1.2k",
+      "winRate": "52%",
+      "mainChar": "Jett"
+    },
+    {
+      "game": "Raft",
+      "role": "Survivor",
+      "rank": "N/A",
+      "hours": "500",
+      "winRate": "N/A",
+      "mainChar": "N/A"
+    }
+  ],
+  "resume": {
+    "filename": "resume.pdf",
+    "path": "/assets/resume.pdf"
+  }
+}

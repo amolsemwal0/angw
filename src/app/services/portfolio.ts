@@ -1,5 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 
+// --- Interfaces matching your JSON structure ---
 interface Skill {
   name: string;
   level: number;
@@ -21,91 +23,170 @@ interface GameStat {
   winRate: string;
   mainChar: string;
 }
-interface NavTab {
-  id: string;
-  label: string;
+interface ResumeConfig {
+  filename: string;
+  path: string;
+}
+
+// The shape of the external JSON file
+interface PortfolioData {
+  skills: Skill[];
+  projects: Project[];
+  gameStats: GameStat[];
+  resume: ResumeConfig;
+}
+
+interface CommandLog {
+  type: 'input' | 'output' | 'error' | 'system';
+  text: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class Portfolio {
+  private http = inject(HttpClient);
+
+  // Global State
+  booted = signal<boolean>(false);
   activeTab = signal<string>('home');
+  crtMode = signal<boolean>(true);
   mobileMenuOpen = signal<boolean>(false);
 
-  tabs: NavTab[] = [
+  // Data Signals -> Initialized as EMPTY arrays, populated by JSON
+  skills = signal<Skill[]>([]);
+  projects = signal<Project[]>([]);
+  gameStats = signal<GameStat[]>([]);
+
+  // Resume Config -> Default fallback, overwritten by JSON
+  resumeConfig = signal<ResumeConfig>({
+    filename: 'resume.pdf',
+    path: '/assets/resume.pdf',
+  });
+
+  // Terminal State
+  terminalLogs = signal<CommandLog[]>([{ type: 'system', text: 'Initializing ZeroOS v2.0...' }]);
+
+  tabs = [
     { id: 'home', label: 'Dashboard' },
-    { id: 'skills', label: 'Tech Stack' },
-    { id: 'projects', label: 'Active Quests' },
-    { id: 'gaming', label: 'Game Stats' },
+    { id: 'skills', label: 'Tech Tree' },
+    { id: 'projects', label: 'Quests' },
+    { id: 'gaming', label: 'Stats' },
   ];
 
-  skills = signal<Skill[]>([
-    {
-      name: 'Java / Spring Boot',
-      level: 95,
-      color: '#ef4444',
-      icon: '<svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>',
-    },
-    {
-      name: 'Linux / Bash',
-      level: 90,
-      color: '#eab308',
-      icon: '<svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M20 19V7H4v12h16m0-16c1.1 0 2 .9 2 2v14c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h16m-7 14v-2h5v2h-5m-3.42-4L5.57 9H8.4l3.3 3.3c.39.39.39 1.03 0 1.42L8.42 17H5.59l3.99-4z"/></svg>',
-    },
-    {
-      name: 'Angular / Tailwind',
-      level: 85,
-      color: '#a855f7',
-      icon: '<svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M12 2L1 21h22L12 2zm0 3.5L19.5 19h-15L12 5.5z"/></svg>',
-    },
-    {
-      name: 'Docker / K8s',
-      level: 75,
-      color: '#3b82f6',
-      icon: '<svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M2 13h2v6H2v-6m4-4h2v10H6V9m4-4h2v14h-2V5m4-4h2v18h-2V1zm4 8h2v10h-2V9z"/></svg>',
-    },
-  ]);
+  constructor() {
+    this.loadData();
+  }
 
-  projects = signal<Project[]>([
-    {
-      title: 'Distributed Payment Gateway',
-      role: 'Backend Architect',
-      stack: ['Java 17', 'Spring Cloud', 'Kafka', 'Redis'],
-      status: 'Live',
-      desc: 'Microservices architecture handling 10k transactions/sec.',
-    },
-    {
-      title: 'Linux Kernel Tuner UI',
-      role: 'Full Stack',
-      stack: ['Rust', 'Angular', 'Electron'],
-      status: 'Compiling',
-      desc: 'A GUI for adjusting kernel parameters on the fly.',
-    },
-  ]);
+  // --- 1. FETCH ALL DATA FROM EXTERNAL JSON ---
+  private loadData() {
+    // Using absolute path /assets/data.json to ensure it works in all environments
+    this.http.get<PortfolioData>('/assets/data.json').subscribe({
+      next: (data) => {
+        // Populate signals with data from the file
+        this.skills.set(data.skills);
+        this.projects.set(data.projects);
+        this.gameStats.set(data.gameStats);
 
-  gameStats = signal<GameStat[]>([
-    {
-      game: 'DOTA 2',
-      role: 'Hard Support',
-      rank: 'Divine 3',
-      hours: '4,200 hrs',
-      winRate: '54.2%',
-      mainChar: 'Crystal Maiden',
-    },
-    {
-      game: 'CS:GO / CS2',
-      role: 'Entry Fragger',
-      rank: 'Global Elite',
-      hours: '1,800 hrs',
-      winRate: '49.8%',
-      mainChar: 'AK-47',
-    },
-  ]);
+        if (data.resume) {
+          this.resumeConfig.set(data.resume);
+        }
 
+        this.addLog('system', 'Data modules loaded successfully.');
+        this.addLog('system', 'Type "help" to see available commands.');
+      },
+      error: (err) => {
+        this.addLog('error', 'CRITICAL ERROR: Failed to load /assets/data.json');
+        console.error('Portfolio Data Error:', err);
+      },
+    });
+  }
+
+  // --- ACTIONS ---
   setActiveTab(id: string) {
     this.activeTab.set(id);
     this.mobileMenuOpen.set(false);
+    this.addLog('system', `Mounted ./${id}`);
+  }
+
+  toggleCrt() {
+    this.crtMode.update((v) => !v);
   }
   toggleMobileMenu() {
     this.mobileMenuOpen.update((v) => !v);
+  }
+  completeBoot() {
+    this.booted.set(true);
+  }
+
+  addLog(type: 'input' | 'output' | 'error' | 'system', text: string) {
+    this.terminalLogs.update((logs) => [...logs, { type, text }]);
+  }
+
+  // --- CLI LOGIC ---
+  executeCommand(cmd: string) {
+    const cleanCmd = cmd.trim().toLowerCase();
+    this.addLog('input', `root@portfolio:~$ ${cmd}`);
+
+    if (cleanCmd === 'help') {
+      this.addLog(
+        'output',
+        'Available commands: help, clear, ls, cd [page], whoami, date, sudo [cmd], wget resume'
+      );
+    } else if (cleanCmd === 'ls') {
+      // 2. Use dynamic filename from JSON
+      this.addLog(
+        'output',
+        `dashboard  tech_tree  quests  game_stats  ${this.resumeConfig().filename}`
+      );
+    } else if (cleanCmd === 'clear') {
+      this.terminalLogs.set([]);
+    } else if (cleanCmd === 'whoami') {
+      this.addLog('output', 'Amol Semwal AKA Zero');
+    } else if (cleanCmd === 'date') {
+      this.addLog('output', new Date().toString());
+    } else if (cleanCmd.startsWith('cd')) {
+      const parts = cleanCmd.split(' ');
+      const target = parts.length > 1 ? parts[1] : '';
+
+      if (['dashboard', 'home'].includes(target)) this.setActiveTab('home');
+      else if (['tech_tree', 'skills'].includes(target)) this.setActiveTab('skills');
+      else if (['quests', 'projects'].includes(target)) this.setActiveTab('projects');
+      else if (['game_stats', 'gaming'].includes(target)) this.setActiveTab('gaming');
+      else this.addLog('error', `cd: ${target}: No such file or directory`);
+    }
+    // === 3. DYNAMIC RESUME DOWNLOAD ===
+    else if (cleanCmd.startsWith('wget') || cleanCmd.startsWith('curl')) {
+      if (cleanCmd.includes('resume')) {
+        const config = this.resumeConfig();
+
+        this.addLog('system', 'Resolving host portfolio.dev...');
+        setTimeout(() => this.addLog('system', 'Connecting... connected.'), 400);
+        setTimeout(
+          () => this.addLog('system', 'HTTP request sent, awaiting response... 200 OK'),
+          800
+        );
+
+        setTimeout(() => {
+          this.addLog('output', `Length: 42KB [application/pdf]`);
+          this.addLog('output', `Saving to: ${config.filename}`);
+
+          // --- Actual Download using JSON path ---
+          const link = document.createElement('a');
+          link.href = config.path; // Dynamic Path from JSON
+          link.download = config.filename; // Dynamic Name from JSON
+          link.target = '_blank';
+          link.click();
+          // -----------------------
+
+          this.addLog('system', '100%[===================>] 42K  --.-KB/s    in 0s');
+          this.addLog('system', `${config.filename} saved.`);
+        }, 1500);
+      } else {
+        this.addLog('error', 'usage: wget resume');
+      }
+    } else if (cleanCmd.startsWith('sudo')) {
+      this.addLog('error', 'User is not in the sudoers file. This incident will be reported.');
+    } else {
+      this.addLog('error', `bash: ${cleanCmd}: command not found`);
+    }
   }
 }

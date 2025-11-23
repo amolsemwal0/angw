@@ -1,0 +1,33 @@
+<div
+  class="fixed inset-0 bg-black z-50 p-6 md:p-12 font-mono text-sm md:text-base text-slate-300 overflow-hidden cursor-none flex flex-col justify-end pb-20"
+>
+  <!-- Logo -->
+  <div class="absolute top-10 left-10 md:left-20 text-emerald-500 font-bold mb-10">
+    AMOL_BIOS (C) 2025 PCI-ISA System<br />
+    Version 2.4.1. Release date 11/24/2025
+  </div>
+
+  <!-- Boot Logs -->
+  <div class="space-y-1">
+    @for (line of lines(); track $index) {
+    <div>
+      <span *ngIf="line.startsWith('[')" class="text-emerald-500 font-bold mr-2">{{
+        line.split(']')[0] + ']'
+      }}</span>
+      <span [class.text-white]="line.startsWith('[')">{{
+        line.startsWith('[') ? line.split(']')[1] : line
+      }}</span>
+    </div>
+    }
+    <div class="animate-pulse text-emerald-500 mt-2">_</div>
+  </div>
+
+  <!-- Loading Bar -->
+  <div class="mt-8 w-full max-w-md border border-slate-700 h-6 p-1 relative">
+    <div
+      class="h-full bg-emerald-500 transition-all duration-300"
+      [style.width.%]="progress()"
+    ></div>
+  </div>
+  <div class="mt-2 text-xs text-slate-500">Checking NVMe Integrity... {{ progress() }}%</div>
+</div>
