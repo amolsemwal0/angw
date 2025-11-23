@@ -1,0 +1,54 @@
+<aside
+  [class.hidden]="!mobileMenuOpen()"
+  class="md:flex flex-col w-full md:w-64 bg-slate-950 border-r border-slate-800 h-auto md:h-screen fixed md:sticky top-0 z-50 transition-all duration-300"
+>
+  <!-- Profile Header -->
+  <div class="p-6 border-b border-slate-800 bg-slate-950/50 backdrop-blur-md">
+    <div
+      class="relative w-16 h-16 rounded-full bg-gradient-to-tr from-emerald-500 to-indigo-600 p-[2px] mb-4"
+    >
+      <div
+        class="w-full h-full rounded-full bg-slate-900 flex items-center justify-center overflow-hidden"
+      >
+        <span class="font-mono text-xl font-bold text-white">DEV</span>
+      </div>
+      <div
+        class="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-slate-900 rounded-full animate-pulse"
+      ></div>
+    </div>
+    <h1 class="text-xl font-bold text-white">Amol Semwal</h1>
+    <p class="text-sm text-slate-400 font-mono mt-1">Java Developer</p>
+  </div>
+
+  <!-- Navigation Links -->
+  <nav class="flex-1 p-4 space-y-2 font-mono text-sm">
+    @for (tab of tabs; track tab.id) {
+    <button
+      (click)="selectTab(tab.id)"
+      [class]="
+        activeTab() === tab.id
+          ? 'w-full text-left px-4 py-3 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)] transition-all'
+          : 'w-full text-left px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-900 hover:text-white transition-all'
+      "
+    >
+      <span class="mr-2 opacity-50">{{ activeTab() === tab.id ? '>' : '#' }}</span>
+      {{ tab.label }}
+    </button>
+    }
+  </nav>
+
+  <!-- System Status (Footer) -->
+  <div class="p-4 border-t border-slate-800 text-xs font-mono text-slate-500">
+    <div class="flex justify-between mb-2">
+      <span>HEAP</span>
+      <span class="text-emerald-500">512MB / 4GB</span>
+    </div>
+    <div class="w-full bg-slate-900 rounded-full h-1.5 mb-3">
+      <div class="bg-emerald-500 h-1.5 rounded-full" style="width: 12%"></div>
+    </div>
+    <div class="flex justify-between">
+      <span>UPTIME</span>
+      <span>99.9%</span>
+    </div>
+  </div>
+</aside>

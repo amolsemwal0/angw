@@ -3,17 +3,17 @@ import { Component, inject } from '@angular/core';
 import { Portfolio } from '../../services/portfolio';
 
 @Component({
-  selector: 'app-dashboard',
+  selector: 'app-side-nav',
   imports: [CommonModule],
-  templateUrl: './dashboard.html',
-  styleUrl: './dashboard.scss',
+  templateUrl: './side-nav.html',
+  styleUrl: './side-nav.scss',
 })
-export class Dashboard {
+export class SideNav {
   private readonly service = inject(Portfolio);
-
-  today = new Date();
+  mobileMenuOpen = this.service.mobileMenuOpen;
   activeTab = this.service.activeTab;
-  skills = this.service.skills;
-  projects = this.service.projects;
-  gameStats = this.service.gameStats;
+  tabs = this.service.tabs;
+  selectTab(id: string) {
+    this.service.setActiveTab(id);
+  }
 }

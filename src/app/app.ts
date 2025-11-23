@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { Event as RouterEvent, NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { Event as RouterEvent, NavigationEnd, Router } from '@angular/router';
 import { IStaticMethods } from 'preline';
 import { MainLayout } from "./layouts/main-layout/main-layout";
 
