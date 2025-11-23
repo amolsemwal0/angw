@@ -1,9 +1,10 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { Portfolio } from '../../services/portfolio';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-boot-sequence',
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './boot-sequence.html',
   styleUrl: './boot-sequence.scss',
 })
