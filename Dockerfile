@@ -23,7 +23,7 @@ RUN rm -rf /usr/share/nginx/html/*
 
 # Copy the build output to replace the default nginx contents.
 # MEMO: Replace 'portfolio-app' with the actual name of your project folder in /dist/
-COPY --from=builder /app/dist/portfolio-app/browser /usr/share/nginx/html
+COPY --from=builder /app/dist/angw/browser /usr/share/nginx/html
 
 # Copy our custom nginx config for SPA routing
 COPY nginx.conf /etc/nginx/conf.d/default.conf
